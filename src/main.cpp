@@ -7,10 +7,9 @@
 
 std::unordered_map<int, std::string> num_to_output;
 std::unordered_map<std::string, std::string> outputs;
-std::vector<int> wacom_devices;
 
 void set_wacom_area(int num) {
-  for(int device: wacom_devices) {
+  for(int device: Util::get_wacom_devices()) {
     std::stringstream ss;
     ss << "xsetwacom --set " << device << " MapToOutput " << num_to_output[num];
     int res = system(ss.str().c_str());
@@ -28,7 +27,6 @@ void update_workspace_outputs(const auto& conn) {
 
 int main(int argc, char** argv) {
   outputs = Util::get_monitors();
-  wacom_devices = Util::get_wacom_devices();
   i3ipc::connection conn;
   bool status = conn.subscribe(i3ipc::ET_WORKSPACE);
   if(!status) {
