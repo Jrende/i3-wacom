@@ -19,25 +19,26 @@ void set_wacom_area(int num) {
   }
 }
 
-void update_workspace_outputs(const auto& conn) {
-  for(const auto& ws: conn.get_workspaces()) {
+void update_workspace_outputs(const i3ipc::connection& connection) {
+  for(const auto& ws: connection.get_workspaces()) {
     num_to_output[ws->num] = outputs[ws->output];
   }
 }
 
 int main(int argc, char** argv) {
   outputs = Util::get_monitors();
-  i3ipc::connection conn;
-  bool status = conn.subscribe(i3ipc::ET_WORKSPACE);
+  i3ipc::connection connection;
+  bool status = connection.subscribe(i3ipc::ET_WORKSPACE);
   if(!status) {
     std::cerr << "Unable to subscribe to i3 ET_WORKSPACE events!\n";
   }
-  update_workspace_outputs(conn);
+  update_workspace_outputs(connection);
+  set_wacom_area(1);
 
-  conn.signal_workspace_event.connect([&](const i3ipc::workspace_event_t&  ev) {
+  connection.signal_workspace_event.connect([&](const i3ipc::workspace_event_t&  ev) {
     switch((char) ev.type) {
       case 'i':
-        update_workspace_outputs(conn);
+        update_workspace_outputs(connection);
         break;
       case 'f':
         set_wacom_area(ev.current->num);
@@ -47,9 +48,9 @@ int main(int argc, char** argv) {
     }
   });
 
-  conn.prepare_to_event_handling();
+  connection.prepare_to_event_handling();
   while (true) {
-    conn.handle_event();
+    connection.handle_event();
   }
   return 0;
 }
